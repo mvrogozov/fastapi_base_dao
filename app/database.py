@@ -1,0 +1,70 @@
+import logging
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
+                                    create_async_engine)
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+engine: AsyncEngine = create_async_engine(settings.db_url)
+
+async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+@asynccontextmanager
+async def get_session(isolation_level: str | None = None) -> AsyncGenerator[AsyncSession, None]:
+    """
+    Асинхронный генератор сессий для работы с базой данных.
+    Используется для получения сессии в эндпоинтах и репозиториях.
+    Параметры:
+    - `isolation_level`: уровень изоляции для транзакции
+        (например, "SERIALIZABLE").
+    Пример использования:
+        async with get_session(isolation_level='REPEATABLE READ') as session:
+            ...
+    """
+    async with async_session_maker() as session:
+        if isolation_level:
+            await session.exec(
+                text(f'SET TRNSACTION ISOLATION LEVEL {isolation_level}')
+            )
+        yield session
+
+
+# async def create_db_and_tables():
+#     """
+#     Асинхронно создаёт все таблицы в базе данных согласно моделям SQLModel.
+#     Используется при инициализации приложения.
+#     """
+#     async with engine.begin() as conn:
+#         await conn.run_sync(SQLModel.metadata.create_all)
+
+
+async def check_connection() -> bool:
+    """
+    Проверяет соединение с базой данных.
+    Возвращает True, если соединение успешно, иначе False.
+    """
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text('SELECT 1'))
+        logger.info('Database test connection successful')
+        return True
+    except SQLAlchemyError as e:
+        logger.error(f'Database connection failed: {e}')
+        return False
+
+
+# async def init_db() -> None:
+#     """
+#     Инициализирует базу данных: проверяет соединение и создаёт таблицы, если соединение успешно.
+#     """
+#     if await check_connection():
+#         await create_db_and_tables()
