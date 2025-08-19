@@ -1,8 +1,8 @@
 """init rev
 
-Revision ID: 5a97e25c58c0
+Revision ID: dc1b1090dd28
 Revises: 
-Create Date: 2025-08-18 16:50:50.012981
+Create Date: 2025-08-19 14:19:45.642984
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5a97e25c58c0'
+revision: str = 'dc1b1090dd28'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -36,7 +36,7 @@ def upgrade() -> None:
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('author_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['author_id'], ['person.id'], ),
-    sa.PrimaryKeyConstraint('id', 'author_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_book_id'), 'book', ['id'], unique=False)
     op.create_index(op.f('ix_book_name'), 'book', ['name'], unique=True)

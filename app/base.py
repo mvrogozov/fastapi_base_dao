@@ -59,6 +59,8 @@ class BaseDAO(Generic[T]):
             async with get_session() as session:
                 new_instance = cls.model(**values_dict)
                 session.add(new_instance)
+                await session.commit()
+                await session.refresh(new_instance)
                 return new_instance
         except SQLAlchemyError:
             raise
