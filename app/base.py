@@ -39,11 +39,14 @@ class BaseDAO(Generic[T]):
             raise
 
     @classmethod
-    async def find_all(cls, filters: BaseModel| None):
+    async def find_all(cls, filters: BaseModel | None):
         if filters:
-            filter_dict = filters.model_dump(exclude_unset=True)
+            filter_dict = filters.model_dump(
+                exclude_unset=True,
+                exclude_none=True
+            )
         else:
-            filter_dict = []
+            filter_dict = {}
         try:
             async with get_session() as session:
                 query = select(cls.model).filter_by(**filter_dict)

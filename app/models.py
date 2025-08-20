@@ -18,4 +18,7 @@ class Person(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True, index=True)
     name: str = Field(index=True)
     surname: str = Field(index=True)
-    books: list['Book'] = Relationship(back_populates='author')
+    books: list['Book'] = Relationship(
+        back_populates='author',
+        #sa_relationship_kwargs={'joinedload': True}
+    )
